@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学生成绩管理系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{color:white;text-align:center;margin-bottom:30px;font-size:2.5em}
+.card{background:white;border-radius:15px;padding:25px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #f0f0f0}
+.card-title{font-size:1.5em;color:#333}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:14px;transition:all 0.3s}
+.btn-primary{background:#667eea;color:white}
+.btn-primary:hover{background:#5568d3;transform:translateY(-2px)}
+.btn-success{background:#10b981;color:white}
+.btn-success:hover{background:#059669}
+.btn-danger{background:#ef4444;color:white}
+.btn-danger:hover{background:#dc2626}
+.btn-warning{background:#f59e0b;color:white}
+.btn-warning:hover{background:#d97706}
+.btn-sm{padding:6px 12px;font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #f0f0f0}
+th{background:#f8f9fa;color:#333;font-weight:600}
+tr:hover{background:#f8f9fa}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.stat-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;border-radius:12px;text-align:center}
+.stat-value{font-size:2.5em;font-weight:bold}
+.stat-label{font-size:14px;opacity:0.9}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000}
+.modal.active{display:flex}
+.modal-content{background:white;padding:30px;border-radius:15px;width:90%;max-width:500px}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;margin-bottom:8px;color:#333;font-weight:500}
+.form-group input,.form-group select{width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#667eea}
+.form-actions{display:flex;gap:10px;justify-content:flex-end}
+.tabs{display:flex;gap:10px;margin-bottom:20px}
+.tab{padding:12px 24px;background:#f0f0f0;border:none;border-radius:8px;cursor:pointer;font-size:16px;transition:all 0.3s}
+.tab.active{background:#667eea;color:white}
+.tab-content{display:none}
+.tab-content.active{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📚 学生成绩管理系统</h1>
+<div class="card">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-value" id="statAverage">0</div><div class="stat-label">平均分</div></div>
+<div class="stat-card" style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);"><div class="stat-value" id="statHighest">0</div><div class="stat-label">最高分</div></div>
+<div class="stat-card" style="background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);"><div class="stat-value" id="statLowest">0</div><div class="stat-label">最低分</div></div>
+<div class="stat-card" style="background:linear-gradient(135deg,#43e97b 0%,#38f9d7 100%);"><div class="stat-value" id="statTotal">0</div><div class="stat-label">总成绩数</div></div>
+</div>
+</div>
+<div class="card">
+<div class="tabs">
+<button class="tab active" onclick="switchTab('students')">学生管理</button>
+<button class="tab" onclick="switchTab('grades')">成绩管理</button>
+</div>
+<div id="students-tab" class="tab-content active">
+<div class="card-header"><span class="card-title">学生列表</span><button class="btn btn-primary" onclick="showAddStudentModal()">➕ 添加学生</button></div>
+<table><thead><tr><th>ID</th><th>学号</th><th>姓名</th><th>班级</th><th>操作</th></tr></thead><tbody id="studentsTable"></tbody></table>
+</div>
+<div id="grades-tab" class="tab-content">
+<div class="card-header"><span class="card-title">成绩列表</span><button class="btn btn-primary" onclick="showAddGradeModal()">➕ 添加成绩</button></div>
+<table><thead><tr><th>ID</th><th>学生</th><th>科目</th><th>分数</th><th>操作</th></tr></thead><tbody id="gradesTable"></tbody></table>
+</div>
+</div>
+</div>
+<div class="modal" id="studentModal">
+<div class="modal-content">
+<h2 id="studentModalTitle" style="margin-bottom:20px;">添加学生</h2>
+<form id="studentForm">
+<input type="hidden" id="studentId">
+<div class="form-group"><label>学号</label><input type="text" id="studentNo" required></div>
+<div class="form-group"><label>姓名</label><input type="text" id="studentName" required></div>
+<div class="form-group"><label>班级</label><input type="text" id="studentClass" required></div>
+<div class="form-actions">
+<button type="button" class="btn btn-danger" onclick="closeModal('studentModal')">取消</button>
+<button type="submit" class="btn btn-success">保存</button>
+</div>
+</form>
+</div>
+</div>
+<div class="modal" id="gradeModal">
+<div class="modal-content">
+<h2 id="gradeModalTitle" style="margin-bottom:20px;">添加成绩</h2>
+<form id="gradeForm">
+<input type="hidden" id="gradeId">
+<div class="form-group"><label>学生</label><select id="gradeStudent" required><option value="">请选择学生</option></select></div>
+<div class="form-group"><label>科目</label><input type="text" id="gradeSubject" required></div>
+<div class="form-group"><label>分数</label><input type="number" id="gradeScore" min="0" max="100" required></div>
+<div class="form-actions">
+<button type="button" class="btn btn-danger" onclick="closeModal('gradeModal')">取消</button>
+<button type="submit" class="btn btn-success">保存</button>
+</div>
+</form>
+</div>
+</div>
+<script>
+let students=[];
+async function loadData(){await Promise.all([loadStudents(),loadGrades(),loadStats()])}
+async function loadStudents(){const res=await fetch('/api/students');students=await res.json();renderStudents()}
+async function loadGrades(){const res=await fetch('/api/grades');const grades=await res.json();renderGrades(grades);updateStudentSelect()}
+async function loadStats(){const res=await fetch('/api/stats');const stats=await res.json();document.getElementById('statAverage').textContent=stats.average;document.getElementById('statHighest').textContent=stats.highest;document.getElementById('statLowest').textContent=stats.lowest;document.getElementById('statTotal').textContent=stats.total}
+function renderStudents(){const tbody=document.getElementById('studentsTable');if(students.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;">暂无学生数据</td></tr>';return}tbody.innerHTML=students.map(s=>`<tr><td>${s.id}</td><td>${s.no}</td><td>${s.name}</td><td>${s.class}</td><td><button class="btn btn-warning btn-sm" onclick="editStudent(${s.id})">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id})">删除</button></td></tr>`).join('')}
+function renderGrades(grades){const tbody=document.getElementById('gradesTable');if(grades.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;">暂无成绩数据</td></tr>';return}tbody.innerHTML=grades.map(g=>{const student=students.find(s=>s.id===g.student_id);return`<tr><td>${g.id}</td><td>${student?student.name:'未知'}</td><td>${g.subject}</td><td>${g.score}</td><td><button class="btn btn-warning btn-sm" onclick="editGrade(${g.id})">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteGrade(${g.id})">删除</button></td></tr>`}).join('')}
+function updateStudentSelect(){const select=document.getElementById('gradeStudent');select.innerHTML='<option value="">请选择学生</option>'+students.map(s=>`<option value="${s.id}">${s.name} (${s.no})</option>`).join('')}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));if(tab==='students'){document.querySelectorAll('.tab')[0].classList.add('active');document.getElementById('students-tab').classList.add('active')}else{document.querySelectorAll('.tab')[1].classList.add('active');document.getElementById('grades-tab').classList.add('active')}}
+function showAddStudentModal(){document.getElementById('studentModalTitle').textContent='添加学生';document.getElementById('studentForm').reset();document.getElementById('studentId').value='';document.getElementById('studentModal').classList.add('active')}
+function showAddGradeModal(){document.getElementById('gradeModalTitle').textContent='添加成绩';document.getElementById('gradeForm').reset();document.getElementById('gradeId').value='';updateStudentSelect();document.getElementById('gradeModal').classList.add('active')}
+function closeModal(modalId){document.getElementById(modalId).classList.remove('active')}
+function editStudent(id){const student=students.find(s=>s.id===id);if(!student)return;document.getElementById('studentModalTitle').textContent='编辑学生';document.getElementById('studentId').value=student.id;document.getElementById('studentNo').value=student.no;document.getElementById('studentName').value=student.name;document.getElementById('studentClass').value=student.class;document.getElementById('studentModal').classList.add('active')}
+async function editGrade(id){const res=await fetch('/api/grades');const grades=await res.json();const grade=grades.find(g=>g.id===id);if(!grade)return;updateStudentSelect();document.getElementById('gradeModalTitle').textContent='编辑成绩';document.getElementById('gradeId').value=grade.id;document.getElementById('gradeStudent').value=grade.student_id;document.getElementById('gradeSubject').value=grade.subject;document.getElementById('gradeScore').value=grade.score;document.getElementById('gradeModal').classList.add('active')}
+document.getElementById('studentForm').onsubmit=async(e)=>{e.preventDefault();const id=document.getElementById('studentId').value;const data={no:document.getElementById('studentNo').value,name:document.getElementById('studentName').value,class:document.getElementById('studentClass').value};if(id){await fetch(`/api/students/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}else{await fetch('/api/students',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}closeModal('studentModal');await loadData()};
+document.getElementById('gradeForm').onsubmit=async(e)=>{e.preventDefault();const id=document.getElementById('gradeId').value;const data={student_id:parseInt(document.getElementById('gradeStudent').value),subject:document.getElementById('gradeSubject').value,score:parseInt(document.getElementById('gradeScore').value)};if(id){await fetch(`/api/grades/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}else{await fetch('/api/grades',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}closeModal('gradeModal');await loadData()};
+async function deleteStudent(id){if(!confirm('确定要删除该学生吗？删除后该学生的成绩也会被删除。'))return;await fetch(`/api/students/${id}`,{method:'DELETE'});await loadData()}
+async function deleteGrade(id){if(!confirm('确定要删除该成绩吗？'))return;await fetch(`/api/grades/${id}`,{method:'DELETE'});await loadData()}
+loadData();
+</script>
+</body>
+</html>
